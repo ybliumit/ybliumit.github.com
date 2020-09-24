@@ -1,61 +1,96 @@
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <meta name="description" content="">
-    <meta name="author" content="Mark Otto, Jacob Thornton, and Bootstrap contributors">
-    <meta name="generator" content="Jekyll v4.0.1">
-    <title>Cover Template · Bootstrap</title>
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Map</title>
+<script src="https://api.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.js"></script>
+<link href="https://api.mapbox.com/mapbox-gl-js/v1.11.0/mapbox-gl.css" rel="stylesheet" />
+<style>
+  body { margin: 0; padding: 0; }
+  #map { position: absolute; top: 0; bottom: 0; width: 100%; }
+  .map-overlay{
+    position: absolute;
+    left: 0;
+    padding: px;
+  }
+</style>
+</head>
+<body>
 
-    <!-- Bootstrap core CSS -->
-    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" rel="stylesheet">
+<div id="map"></div>
 
-    <style>
-      .bd-placeholder-img {
-        font-size: 1.125rem;
-        text-anchor: middle;
-        -webkit-user-select: none;
-        -moz-user-select: none;
-        -ms-user-select: none;
-        user-select: none;
-      }
+<script>
 
-      @media (min-width: 768px) {
-        .bd-placeholder-img-lg {
-          font-size: 3.5rem;
-        }
-      }
-    </style>
-    <!-- Custom styles for this template -->
-    <link href="cover.css" rel="stylesheet">
-  </head>
-  <body class="text-center">
-    <div class="cover-container d-flex w-100 h-100 p-3 mx-auto flex-column">
-  <header class="masthead mb-auto">
-    <div class="inner">
-      <h3 class="masthead-brand">Cover</h3>
-      <nav class="nav nav-masthead justify-content-center">
-        <a class="nav-link active" href="#">Home</a>
-        <a class="nav-link" href="#">Features</a>
-        <a class="nav-link" href="#">Contact</a>
-      </nav>
-    </div>
-  </header>
+// get token at https://account.mapbox.com
+mapboxgl.accessToken = 'pk.eyJ1IjoieXVhbmJvbGl1IiwiYSI6ImNrZmZwbWczODBkMGUycmxhcWxwemVyN3MifQ.LDLOy5uMk0VKJsFNck4BGw';
 
-  <main role="main" class="inner cover">
-    <h1 class="cover-heading">Yuanbo's Site.</h1>
-    <p class="lead">Cover is a one-page template for building simple and beautiful home pages. Download, edit the text, and add your own fullscreen background photo to make it your own.</p>
-    <p class="lead">
-      <a href="#" class="btn btn-lg btn-secondary">Learn more</a>
-    </p>
-  </main>
+var map = new mapboxgl.Map({
+  container: 'map',
+  style: 'mapbox://styles/mapbox/streets-v11',
+  zoom: 13,
+  center: [-71.14344436, 42.35004476]
+});
 
-  <footer class="mastfoot mt-auto">
-    <div class="inner">
-      <p>Cover template for <a href="https://getbootstrap.com/">Bootstrap</a>, by <a href="https://twitter.com/mdo">@mdo</a>.</p>
-    </div>
-  </footer>
-</div>
+
+async function getBusLocations(){
+    const url= 'https://api-v3.mbta.com/vehicles?filter[route]=57&include=trip';
+    const response = await fetch(url);
+    const json = await response.json();
+    return json.data;
+}
+
+function markerCreator(log_lat) {
+    var marker = new mapboxgl.Marker()
+        .setLngLat(log_lat)
+        .addTo(map);
+    return marker; 
+}
+async function run(){
+    const locations = await getBusLocations();
+    //console.log(new Date());
+    //console.log(locations[0].attributes.latitude);
+    busLocations = [];
+    markers = [];
+    for (let index = 0; index < locations.length; index++) {
+        busLocations.push([locations[index].attributes.longitude, locations[index].attributes.latitude]);
+        markers.push(markerCreator([locations[index].attributes.longitude, locations[index].attributes.latitude])); 
+    }
+    console.log(busLocations);
+    //console.log(markers);
+    setTimeout(function (){for (let index = 0; index < markers.length; index++) {
+        markers[index].remove();        
+    }}, 7000);
+    
+    //update(markers, busLocations);
+    //return markers;
+    setTimeout(run, 7000);
+}
+/*
+
+async function update(){
+    markers = await run();
+    locations = await getBusLocations();
+    
+
+    for (let index = 0; index < locations.length; index++) {
+        markers.push(markerCreator([locations[index].attributes.longitude, locations[index].attributes.latitude]));        
+    }
+    //setTimeout(update, 10000);
+}
+
+var counter = 0;
+function move(){
+  setTimeout(() =>{
+    if (counter>=busStops.length) return;
+    marker.setLngLat(busStops[counter]);
+    counter++;
+    move();
+  }, 1000);
+}
+
+*/
+//update();
+run()
+</script>
 </body>
 </html>
